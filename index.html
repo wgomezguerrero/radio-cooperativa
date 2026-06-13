@@ -2,10 +2,11 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio Taxi - Frecuencia Directa</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <style>
         :root {
             --bg-principal: #121214;
@@ -14,43 +15,106 @@
             --co-exito: #2ecc71;
             --co-transmision: #e74c3c;
             --co-texto: #ffffff;
+            --co-texto-secundario: #a0a0a5;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-principal); color: var(--co-texto); display: flex; flex-direction: column; min-height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
+        body {
+            background-color: var(--bg-principal); color: var(--co-texto);
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
 
-        .navbar-superior { width: 100%; background-color: #1a1a1e; padding: 15px 20px; display: flex; align-items: center; border-bottom: 2px solid #2d2d35; z-index: 100; }
-        .btn-retroceder { color: var(--co-texto); font-size: 1.3rem; margin-right: 15px; cursor: pointer; background: none; border: none; }
-        .main-content { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
+        /* Nueva barra superior de navegación */
+        .navbar-superior {
+            width: 100%;
+            background-color: #1a1a1e;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #2d2d35;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .btn-retroceder {
+            color: var(--co-texto);
+            text-decoration: none;
+            font-size: 1.3rem;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .btn-retroceder:hover { color: var(--co-primario); }
+        .titulo-navbar { font-size: 1rem; font-weight: 600; letter-spacing: 1px; color: var(--co-texto); }
+
+        /* Contenedor central */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
         .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
         
-        .display-radio { width: 100%; background: #0d1b10; border: 3px solid #2d2d35; border-radius: 12px; padding: 15px; text-align: center; border-left: 5px solid var(--co-primario); }
-        .display-frecuencia { font-family: 'Orbitron', sans-serif; color: #39ff14; font-size: 1.5rem; }
+        .display-radio {
+            width: 100%; background: #0d1b10; border: 3px solid #2d2d35; border-radius: 12px;
+            padding: 15px; box-shadow: inset 0 0 15px rgba(0,255,0,0.15); text-align: center; border-left: 5px solid var(--co-primario);
+        }
+        .display-frecuencia { font-family: 'Orbitron', sans-serif; color: #39ff14; font-size: 1.6rem; letter-spacing: 2px; text-shadow: 0 0 8px rgba(57, 255, 20, 0.5); }
+        .display-estado { font-size: 0.85rem; color: #83f55b; text-transform: uppercase; margin-top: 5px; font-weight: 600; }
         
-        .btn-ptt { width: 200px; height: 200px; background: linear-gradient(135deg, #2c2c35, #1a1a24); border: 8px solid #3a3a45; border-radius: 50%; color: #fff; font-size: 3rem; cursor: pointer; display: flex; flex-direction: column; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); touch-action: none; }
-        .btn-ptt.transmitiendo { border-color: var(--co-transmision); background: #c0392b; box-shadow: 0 0 30px rgba(231, 76, 60, 0.6); }
-        .btn-ptt.recibiendo { border-color: var(--co-exito); background: #27ae60; }
+        .ptt-container { width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; position: relative; margin: 10px 0; }
+        .btn-ptt {
+            width: 200px; height: 200px; background: linear-gradient(135deg, #2c2c35, #1a1a24); border: 8px solid #3a3a45;
+            border-radius: 50%; color: var(--co-texto-secundario); font-size: 3.5rem; cursor: pointer;
+            display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 4px 6px rgba(255,255,255,0.1);
+            user-select: none; -webkit-user-select: none; touch-action: manipulation; transition: all 0.2s ease;
+        }
+        .btn-ptt span { font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; }
+        .btn-ptt.transmitiendo { border-color: var(--co-transmision); color: #fff; background: linear-gradient(135deg, #c0392b, #962d22); box-shadow: 0 0 30px rgba(231, 76, 60, 0.6); transform: scale(0.96); }
+        .btn-ptt.recibiendo { border-color: var(--co-exito); color: #fff; background: linear-gradient(135deg, #27ae60, #1e8449); box-shadow: 0 0 30px rgba(46, 204, 113, 0.6); }
         
-        .info-transmision { background: var(--bg-tarjeta); width: 100%; padding: 15px; border-radius: 12px; text-align: center; font-size: 0.9rem; }
+        .ondas { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--co-transmision); opacity: 0; pointer-events: none; }
+        .btn-ptt.transmitiendo + .ondas { animation: pulse-onda 1.5s infinite linear; }
+        @keyframes pulse-onda { 0% { transform: scale(0.7); opacity: 0.8; } 100% { transform: scale(1.2); opacity: 0; } }
+        
+        .info-transmision { background: var(--bg-tarjeta); border: 1px solid #2a2a30; width: 100%; padding: 15px; border-radius: 12px; text-align: center; min-height: 55px; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 
 <div class="navbar-superior">
-    <button class="btn-retroceder" onclick="volverAtras()"><i class="fa-solid fa-arrow-left"></i></button>
-    <div style="font-weight: 600;">FRECUENCIA DE RADIO</div>
+    <button class="btn-retroceder" onclick="volverAtras()" aria-label="Volver">
+        <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <div class="titulo-navbar">FRECUENCIA DE RADIO</div>
 </div>
 
 <div class="main-content">
     <div class="container">
         <div class="display-radio">
-            <div class="display-frecuencia">CANAL-01 CH</div>
-            <div id="lblEstadoConexion" style="font-size: 0.8rem; margin-top: 5px;">INICIANDO...</div>
+            <div class="display-frecuencia"><i class="fa-solid fa-radio"></i> CANAL-01 CH</div>
+            <div class="display-estado" id="lblEstadoConexion">CONFIGURANDO HARDWARE...</div>
         </div>
-        <button id="btnPttRadio" class="btn-ptt" disabled>
-            <i class="fa-solid fa-microphone"></i>
-            <span style="font-size: 0.8rem; margin-top: 5px;" id="txtBotonPtt">ESPERE</span>
-        </button>
-        <div class="info-transmision" id="lblQuienHabla">Sincronizando...</div>
+
+        <div class="ptt-container">
+            <button id="btnPttRadio" class="btn-ptt" disabled>
+                <i class="fa-solid fa-microphone"></i>
+                <span id="txtBotonPtt">ESPERE</span>
+            </button>
+            <div class="ondas"></div>
+        </div>
+
+        <div class="info-transmision" id="lblQuienHabla">
+            <span style="color: var(--co-texto-secundario);">Sincronizando canal de la cooperativa...</span>
+        </div>
     </div>
 </div>
 
@@ -58,6 +122,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
+    // --- CONFIGURACIÓN DE TU FIREBASE ---
     const firebaseConfig = {
   apiKey: "AIzaSyBT57itkr-WcslebPzggdinoPGqrJTUzGE",
   authDomain: "taxivellavega.firebaseapp.com",
@@ -70,66 +135,155 @@
     
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
-    
-    let streamMicrofono = null;
-    let grabadorNativo = null;
-    let fragmentos = [];
+
+    // Variable clave para guardar la marca de tiempo exacta de apertura de la app
+    const horaInicioApp = Date.now();
+
     let estaTransmitiendo = false;
+    let miCodigoSocio = "Socio_" + Math.floor(Math.random() * 899 + 100);
     let ultimoAudioTimestamp = 0;
+    
+    let grabadorNativo = null;
+    let fragmentosAudio = [];
+    let streamMicrofono = null;
+
+    const socioIdLogged = localStorage.getItem("socio_id_logged");
+    if(socioIdLogged && socioIdLogged.trim() !== "") { miCodigoSocio = socioIdLogged; }
+
     const btnPtt = document.getElementById('btnPttRadio');
+    const txtBotonPtt = document.getElementById('txtBotonPtt');
+    const lblEstado = document.getElementById('lblEstadoConexion');
+    const lblQuienHabla = document.getElementById('lblQuienHabla');
 
-    window.onload = async () => {
-        try {
-            streamMicrofono = await navigator.mediaDevices.getUserMedia({ audio: true });
-            btnPtt.disabled = false;
-            document.getElementById('txtBotonPtt').innerText = "PULSAR";
-            document.getElementById('lblEstadoConexion').innerText = "ONLINE";
-        } catch(e) { document.getElementById('lblEstadoConexion').innerText = "ERROR DE MICRÓFONO"; }
-        activarReceptor();
-    };
+    window.onload = function() {
+        // Solicita el micro al cargar la URL de forma legítima
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                streamMicrofono = stream;
+                btnPtt.removeAttribute('disabled');
+                txtBotonPtt.innerText = "PULSAR";
+                lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
+                lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
+            })
+            .catch(e => {
+                lblEstado.innerText = "SIN ACCESO AL MICRÓFONO";
+                lblQuienHabla.innerHTML = `<span style="color: #e74c3c; font-weight: 600;">Permite el micrófono en la barra del teléfono.</span>`;
+            });
 
-    function activarReceptor() {
-        db.ref('radio_frecuencia/canal_01').on('value', (snap) => {
-            const data = snap.val();
-            if (data?.audioBase64 && data.timestamp > ultimoAudioTimestamp && !estaTransmitiendo) {
+        activarReceptorRadio();
+    }
+
+    // --- ESCUCHAR CANAL EN TIEMPO REAL ---
+    function activarReceptorRadio() {
+        db.ref('radio_frecuencia/canal_01').on('value', (snapshot) => {
+            const data = snapshot.val();
+            if (!data) return;
+            if (data.usuario === miCodigoSocio) return;
+
+            // EL FILTRO: Solo procesa el audio si se creó DESPUÉS de que entramos a la app
+            if (data.audioBase64 && data.timestamp && data.timestamp > horaInicioApp && data.timestamp > ultimoAudioTimestamp) {
                 ultimoAudioTimestamp = data.timestamp;
-                reproducirVozEntrante(data.audioBase64);
+                if (!estaTransmitiendo) {
+                    btnPtt.classList.add('recibiendo');
+                    lblEstado.innerText = "RECIBIENDO AUDIO";
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando...</span>`;
+                    reproducirVozEntrante(data.audioBase64);
+                }
+            } 
+            else if (data.estado && data.estado.transmitiendo && data.timestamp > horaInicioApp) {
+                if (!estaTransmitiendo && !btnPtt.classList.contains('recibiendo')) {
+                    lblEstado.innerText = "CANAL OCUPADO";
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> Alguien está en la línea...</span>`;
+                }
+            }
+            else {
+                if (!estaTransmitiendo && !btnPtt.classList.contains('recibiendo')) {
+                    restaurarEstadoOriginal();
+                }
             }
         });
     }
 
     function reproducirVozEntrante(base64Data) {
         const audio = new Audio(base64Data);
-        audio.play();
-        document.getElementById('lblQuienHabla').innerText = "ESCUCHANDO...";
-        audio.onended = () => document.getElementById('lblQuienHabla').innerText = "FRECUENCIA LIBRE";
+        audio.volume = 1.0;
+        audio.play()
+            .then(() => { audio.onended = function() { restaurarEstadoOriginal(); }; })
+            .catch(e => restaurarEstadoOriginal());
     }
 
-    btnPtt.onmousedown = btnPtt.ontouchstart = (e) => {
-        e.preventDefault();
-        estaTransmitiendo = true;
-        fragmentos = [];
-        btnPtt.classList.add('transmitiendo');
-        grabadorNativo = new MediaRecorder(streamMicrofono);
-        grabadorNativo.ondataavailable = e => fragmentos.push(e.data);
-        grabadorNativo.onstop = () => {
-            const blob = new Blob(fragmentos);
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onloadend = () => db.ref('radio_frecuencia/canal_01').set({ audioBase64: reader.result, timestamp: Date.now() });
-        };
-        grabadorNativo.start();
-    };
+    function restaurarEstadoOriginal() {
+        btnPtt.classList.remove('recibiendo');
+        lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
+        lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
+    }
 
-    window.onmouseup = window.ontouchend = () => {
+    // --- MANEJO DEL BOTÓN PTT (PULSAR PARA HABLAR) ---
+    btnPtt.addEventListener('mousedown', iniciarTransmision);
+    window.addEventListener('mouseup', detenerTransmision);
+    btnPtt.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarTransmision(); });
+    window.addEventListener('touchend', detenerTransmision);
+
+    function iniciarTransmision() {
+        if (btnPtt.classList.contains('recibiendo') || estaTransmitiendo || !streamMicrofono) return;
+        
+        estaTransmitiendo = true;
+        fragmentosAudio = [];
+        btnPtt.classList.add('transmitiendo');
+        txtBotonPtt.innerText = "AL AIRE";
+        lblEstado.innerText = "TRANSMITIENDO...";
+        lblQuienHabla.innerHTML = `<span style="color:var(--co-transmision); font-weight:600;"><i class="fa-solid fa-microphone-lines"></i> Hablando...</span>`;
+        
+        db.ref('radio_frecuencia/canal_01/estado').set({ transmitiendo: true, usuario: miCodigoSocio });
+
+        try {
+            grabadorNativo = new MediaRecorder(streamMicrofono);
+            grabadorNativo.ondataavailable = (e) => { if (e.data.size > 0) fragmentosAudio.push(e.data); };
+            
+            grabadorNativo.onstop = () => {
+                if (fragmentosAudio.length > 0) {
+                    const blobAudio = new Blob(fragmentosAudio, { type: 'audio/webm' });
+                    const lector = new FileReader();
+                    lector.readAsDataURL(blobAudio);
+                    lector.onloadend = () => {
+                        db.ref('radio_frecuencia/canal_01').set({
+                            usuario: miCodigoSocio,
+                            audioBase64: lector.result,
+                            timestamp: firebase.database.ServerValue.TIMESTAMP,
+                            estado: { transmitiendo: false, usuario: "" }
+                        });
+                    };
+                } else {
+                    db.ref('radio_frecuencia/canal_01/estado').set({ transmitiendo: false, usuario: "" });
+                }
+            };
+            grabadorNativo.start();
+        } catch(err) {
+            detenerTransmision();
+        }
+    }
+
+    function detenerTransmision() {
         if (!estaTransmitiendo) return;
         estaTransmitiendo = false;
         btnPtt.classList.remove('transmitiendo');
-        if (grabadorNativo) grabadorNativo.stop();
-    };
+        txtBotonPtt.innerText = "PULSAR";
+        lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
 
+        if (grabadorNativo && grabadorNativo.state !== "inactive") {
+            try { grabadorNativo.stop(); } catch(e){}
+        } else {
+            db.ref('radio_frecuencia/canal_01/estado').set({ transmitiendo: false, usuario: "" });
+        }
+    }
+
+    // Función de la flecha superior para volver al menú de la app
     function volverAtras() {
-        window.location.href = "go:inicio";
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = "go:inicio"; // Cierre seguro de respaldo en WebView
+        }
     }
 </script>
 </body>
