@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Radio Taxi</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <title>Radio Taxi - Frecuencia Directa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
@@ -18,49 +18,103 @@
             --co-texto-secundario: #a0a0a5;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        
         body {
-            background-color: var(--bg-principal); color: var(--co-texto); padding: 15px;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            min-height: 100vh;
+            background-color: var(--bg-principal); color: var(--co-texto);
+            display: flex; flex-direction: column; min-height: 100vh;
+        }
+
+        /* Nueva barra superior de navegación */
+        .navbar-superior {
+            width: 100%;
+            background-color: #1a1a1e;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom: 2px solid #2d2d35;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .btn-retroceder {
+            color: var(--co-texto);
+            text-decoration: none;
+            font-size: 1.3rem;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            transition: color 0.2s;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+        .btn-retroceder:hover { color: var(--co-primario); }
+        .titulo-navbar { font-size: 1rem; font-weight: 600; letter-spacing: 1px; color: var(--co-texto); }
+
+        /* Contenedor central */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
         }
         .container { width: 100%; max-width: 450px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
+        
         .display-radio {
             width: 100%; background: #0d1b10; border: 3px solid #2d2d35; border-radius: 12px;
-            padding: 15px; text-align: center; border-left: 5px solid var(--co-primario);
+            padding: 15px; box-shadow: inset 0 0 15px rgba(0,255,0,0.15); text-align: center; border-left: 5px solid var(--co-primario);
         }
-        .display-frecuencia { font-family: 'Orbitron', sans-serif; color: #39ff14; font-size: 1.6rem; letter-spacing: 2px; }
+        .display-frecuencia { font-family: 'Orbitron', sans-serif; color: #39ff14; font-size: 1.6rem; letter-spacing: 2px; text-shadow: 0 0 8px rgba(57, 255, 20, 0.5); }
         .display-estado { font-size: 0.85rem; color: #83f55b; text-transform: uppercase; margin-top: 5px; font-weight: 600; }
-        .ptt-container { width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; position: relative; margin: 20px 0; }
+        
+        .ptt-container { width: 260px; height: 260px; display: flex; justify-content: center; align-items: center; position: relative; margin: 10px 0; }
         .btn-ptt {
             width: 200px; height: 200px; background: linear-gradient(135deg, #2c2c35, #1a1a24); border: 8px solid #3a3a45;
             border-radius: 50%; color: var(--co-texto-secundario); font-size: 3.5rem; cursor: pointer;
             display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 8px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-            user-select: none; -webkit-user-select: none; touch-action: manipulation;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5), inset 0 4px 6px rgba(255,255,255,0.1);
+            user-select: none; -webkit-user-select: none; touch-action: manipulation; transition: all 0.2s ease;
         }
-        .btn-ptt span { font-size: 0.85rem; font-weight: 700; }
-        .btn-ptt.transmitiendo { border-color: var(--co-transmision); color: #fff; background: linear-gradient(135deg, #c0392b, #962d22); }
-        .btn-ptt.recibiendo { border-color: var(--co-exito); color: #fff; background: linear-gradient(135deg, #27ae60, #1e8449); }
-        .info-transmision { background: var(--bg-tarjeta); border: 1px solid #2a2a30; width: 100%; padding: 15px; border-radius: 12px; text-align: center; min-height: 55px; }
+        .btn-ptt span { font-size: 0.85rem; font-weight: 700; letter-spacing: 1px; }
+        .btn-ptt.transmitiendo { border-color: var(--co-transmision); color: #fff; background: linear-gradient(135deg, #c0392b, #962d22); box-shadow: 0 0 30px rgba(231, 76, 60, 0.6); transform: scale(0.96); }
+        .btn-ptt.recibiendo { border-color: var(--co-exito); color: #fff; background: linear-gradient(135deg, #27ae60, #1e8449); box-shadow: 0 0 30px rgba(46, 204, 113, 0.6); }
+        
+        .ondas { position: absolute; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--co-transmision); opacity: 0; pointer-events: none; }
+        .btn-ptt.transmitiendo + .ondas { animation: pulse-onda 1.5s infinite linear; }
+        @keyframes pulse-onda { 0% { transform: scale(0.7); opacity: 0.8; } 100% { transform: scale(1.2); opacity: 0; } }
+        
+        .info-transmision { background: var(--bg-tarjeta); border: 1px solid #2a2a30; width: 100%; padding: 15px; border-radius: 12px; text-align: center; min-height: 55px; font-size: 0.95rem; }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <div class="display-radio">
-        <div class="display-frecuencia"><i class="fa-solid fa-radio"></i> CANAL-01 CH</div>
-        <div class="display-estado" id="lblEstadoConexion">CONFIGURANDO HARDWARE...</div>
-    </div>
+<div class="navbar-superior">
+    <button class="btn-retroceder" onclick="volverAtras()" aria-label="Volver">
+        <i class="fa-solid fa-arrow-left"></i>
+    </button>
+    <div class="titulo-navbar">FRECUENCIA DE RADIO</div>
+</div>
 
-    <div class="ptt-container">
-        <button id="btnPttRadio" class="btn-ptt" disabled>
-            <i class="fa-solid fa-microphone"></i>
-            <span id="txtBotonPtt">ESPERE</span>
-        </button>
-    </div>
+<div class="main-content">
+    <div class="container">
+        <div class="display-radio">
+            <div class="display-frecuencia"><i class="fa-solid fa-radio"></i> CANAL-01 CH</div>
+            <div class="display-estado" id="lblEstadoConexion">CONFIGURANDO HARDWARE...</div>
+        </div>
 
-    <div class="info-transmision" id="lblQuienHabla">
-        <span style="color: var(--co-texto-secundario);">Cargando canal de la cooperativa...</span>
+        <div class="ptt-container">
+            <button id="btnPttRadio" class="btn-ptt" disabled>
+                <i class="fa-solid fa-microphone"></i>
+                <span id="txtBotonPtt">ESPERE</span>
+            </button>
+            <div class="ondas"></div>
+        </div>
+
+        <div class="info-transmision" id="lblQuienHabla">
+            <span style="color: var(--co-texto-secundario);">Sincronizando canal de la cooperativa...</span>
+        </div>
     </div>
 </div>
 
@@ -68,7 +122,7 @@
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
 <script>
-    // --- COLOCA AQUÍ TUS CREDENCIALES DE FIREBASE ---
+    // --- CONFIGURACIÓN DE TU FIREBASE ---
     const firebaseConfig = {
   apiKey: "AIzaSyBT57itkr-WcslebPzggdinoPGqrJTUzGE",
   authDomain: "taxivellavega.firebaseapp.com",
@@ -81,6 +135,9 @@
     
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
+
+    // Variable clave para guardar la marca de tiempo exacta de apertura de la app
+    const horaInicioApp = Date.now();
 
     let estaTransmitiendo = false;
     let miCodigoSocio = "Socio_" + Math.floor(Math.random() * 899 + 100);
@@ -99,7 +156,7 @@
     const lblQuienHabla = document.getElementById('lblQuienHabla');
 
     window.onload = function() {
-        // Al ser cargado desde una URL Web, esto disparará la pregunta nativa de Android de inmediato
+        // Solicita el micro al cargar la URL de forma legítima
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 streamMicrofono = stream;
@@ -110,31 +167,33 @@
             })
             .catch(e => {
                 lblEstado.innerText = "SIN ACCESO AL MICRÓFONO";
-                lblQuienHabla.innerHTML = `<span style="color:red;">Debes permitir el uso del micrófono en la barra superior.</span>`;
+                lblQuienHabla.innerHTML = `<span style="color: #e74c3c; font-weight: 600;">Permite el micrófono en la barra del teléfono.</span>`;
             });
 
         activarReceptorRadio();
     }
 
+    // --- ESCUCHAR CANAL EN TIEMPO REAL ---
     function activarReceptorRadio() {
         db.ref('radio_frecuencia/canal_01').on('value', (snapshot) => {
             const data = snapshot.val();
             if (!data) return;
             if (data.usuario === miCodigoSocio) return;
 
-            if (data.audioBase64 && data.timestamp && data.timestamp > ultimoAudioTimestamp) {
+            // EL FILTRO: Solo procesa el audio si se creó DESPUÉS de que entramos a la app
+            if (data.audioBase64 && data.timestamp && data.timestamp > horaInicioApp && data.timestamp > ultimoAudioTimestamp) {
                 ultimoAudioTimestamp = data.timestamp;
                 if (!estaTransmitiendo) {
                     btnPtt.classList.add('recibiendo');
                     lblEstado.innerText = "RECIBIENDO AUDIO";
-                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high"></i> Escuchando...</span>`;
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando...</span>`;
                     reproducirVozEntrante(data.audioBase64);
                 }
             } 
-            else if (data.estado && data.estado.transmitiendo) {
+            else if (data.estado && data.estado.transmitiendo && data.timestamp > horaInicioApp) {
                 if (!estaTransmitiendo && !btnPtt.classList.contains('recibiendo')) {
                     lblEstado.innerText = "CANAL OCUPADO";
-                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> Alguien está hablando...</span>`;
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> Alguien está en la línea...</span>`;
                 }
             }
             else {
@@ -148,9 +207,9 @@
     function reproducirVozEntrante(base64Data) {
         const audio = new Audio(base64Data);
         audio.volume = 1.0;
-        audio.play().then(() => {
-            audio.onended = function() { restaurarEstadoOriginal(); };
-        }).catch(e => restaurarEstadoOriginal());
+        audio.play()
+            .then(() => { audio.onended = function() { restaurarEstadoOriginal(); }; })
+            .catch(e => restaurarEstadoOriginal());
     }
 
     function restaurarEstadoOriginal() {
@@ -159,7 +218,7 @@
         lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
     }
 
-    // --- ACCIÓN FÍSICA MANTENER PRESIONADO ---
+    // --- MANEJO DEL BOTÓN PTT (PULSAR PARA HABLAR) ---
     btnPtt.addEventListener('mousedown', iniciarTransmision);
     window.addEventListener('mouseup', detenerTransmision);
     btnPtt.addEventListener('touchstart', (e) => { e.preventDefault(); iniciarTransmision(); });
@@ -215,6 +274,15 @@
             try { grabadorNativo.stop(); } catch(e){}
         } else {
             db.ref('radio_frecuencia/canal_01/estado').set({ transmitiendo: false, usuario: "" });
+        }
+    }
+
+    // Función de la flecha superior para volver al menú de la app
+    function volverAtras() {
+        if (window.history.length > 1) {
+            window.history.back();
+        } else {
+            window.location.href = "about:blank"; // Cierre seguro de respaldo en WebView
         }
     }
 </script>
