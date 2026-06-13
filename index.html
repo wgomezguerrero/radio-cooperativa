@@ -279,11 +279,20 @@
 
     // Función de la flecha superior para volver al menú de la app
     function volverAtras() {
+        // Opción A: Intentar volver en el historial del navegador
         if (window.history.length > 1) {
             window.history.back();
-        } else {
-            window.location.href = "go:inicio"; // Cierre seguro de respaldo en WebView
-        }
+        } 
+        
+        // Opción B: Comando para AppCreator24
+        // A veces el WebView necesita un pequeño retraso para procesar el comando
+        setTimeout(function() {
+            window.location.href = "go:inicio"; 
+        }, 100);
+        
+        // Opción C: Si nada de lo anterior funciona, forzar recarga al inicio
+        // Descomenta la línea de abajo si prefieres que te mande a la pantalla principal de la app
+        // window.location.href = "https://appcreator24.com/app/tu_id_de_app"; 
     }
 </script>
 </body>
