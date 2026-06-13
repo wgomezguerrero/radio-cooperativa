@@ -75,6 +75,7 @@
     let grabadorNativo = null;
     let fragmentos = [];
     let estaTransmitiendo = false;
+    let ultimoAudioTimestamp = 0;
     const btnPtt = document.getElementById('btnPttRadio');
 
     window.onload = async () => {
@@ -90,7 +91,8 @@
     function activarReceptor() {
         db.ref('radio_frecuencia/canal_01').on('value', (snap) => {
             const data = snap.val();
-            if (data?.audioBase64 && !estaTransmitiendo) {
+            if (data?.audioBase64 && data.timestamp > ultimoAudioTimestamp && !estaTransmitiendo) {
+                ultimoAudioTimestamp = data.timestamp;
                 reproducirVozEntrante(data.audioBase64);
             }
         });
@@ -98,10 +100,8 @@
 
     function reproducirVozEntrante(base64Data) {
         const audio = new Audio(base64Data);
-        audio.load();
-        audio.play().then(() => {
-            document.getElementById('lblQuienHabla').innerText = "ESCUCHANDO...";
-        }).catch(e => console.log("Error reproducción", e));
+        audio.play();
+        document.getElementById('lblQuienHabla').innerText = "ESCUCHANDO...";
         audio.onended = () => document.getElementById('lblQuienHabla').innerText = "FRECUENCIA LIBRE";
     }
 
@@ -110,8 +110,7 @@
         estaTransmitiendo = true;
         fragmentos = [];
         btnPtt.classList.add('transmitiendo');
-        // Usamos audio/ogg para mejor compatibilidad en Android
-        grabadorNativo = new MediaRecorder(streamMicrofono, { mimeType: 'audio/ogg;codecs=opus' });
+        grabadorNativo = new MediaRecorder(streamMicrofono);
         grabadorNativo.ondataavailable = e => fragmentos.push(e.data);
         grabadorNativo.onstop = () => {
             const blob = new Blob(fragmentos);
@@ -130,10 +129,6 @@
     };
 
     function volverAtras() {
-        if (streamMicrofono) {
-            streamMicrofono.getTracks().forEach(track => track.stop());
-        }
-        estaTransmitiendo = false;
         window.location.href = "go:inicio";
     }
 </script>
