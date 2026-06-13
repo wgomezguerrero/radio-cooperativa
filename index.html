@@ -74,6 +74,7 @@
     let streamMicrofono = null;
     let grabadorNativo = null;
     let fragmentos = [];
+    let estaTransmitiendo = false;
     const btnPtt = document.getElementById('btnPttRadio');
 
     window.onload = async () => {
@@ -98,7 +99,6 @@
         });
     }
 
-    let estaTransmitiendo = false;
     btnPtt.onmousedown = btnPtt.ontouchstart = (e) => {
         e.preventDefault();
         estaTransmitiendo = true;
@@ -123,8 +123,11 @@
     };
 
     function volverAtras() {
-        window.history.back();
-        setTimeout(() => { window.location.href = "go:inicio"; }, 500);
+        if (streamMicrofono) {
+            streamMicrofono.getTracks().forEach(track => track.stop());
+        }
+        estaTransmitiendo = false;
+        window.location.href = "go:inicio";
     }
 </script>
 </body>
