@@ -137,20 +137,25 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
 
-    // Variable clave para guardar la marca de tiempo exacta de apertura de la app
     const horaInicioApp = Date.now();
 
     let estaTransmitiendo = false;
-    let miCodigoSocio = "Socio_" + Math.floor(Math.random() * 899 + 100);
     let ultimoAudioTimestamp = 0;
     
     let grabadorNativo = null;
     let fragmentosAudio = [];
     let streamMicrofono = null;
 
-    // Aquí se lee el Nombre de usuario registrado
-    const socioIdLogged = localStorage.getItem("socio_id_logged");
-    if(socioIdLogged && socioIdLogged.trim() !== "") { miCodigoSocio = socioIdLogged; }
+    // --- CORRECCIÓN CRÍTICA DE IDENTIFICACIÓN ---
+    // Forzamos a que intente leer el nombre real con el que se registró el conductor
+    let miCodigoSocio = localStorage.getItem("socio_id_logged");
+
+    // Si la variable está vacía, no tiene texto o es nula, recién ahí le asignamos un "Anónimo" temporal para que la radio no falle
+    if (!miCodigoSocio || miCodigoSocio.trim() === "") { 
+        miCodigoSocio = "Conductor_Anonimo_" + Math.floor(Math.random() * 899 + 100); 
+    } else {
+        miCodigoSocio = miCodigoSocio.trim(); // Limpia espacios raros si los hay
+    }
 
     const btnPtt = document.getElementById('btnPttRadio');
     const txtBotonPtt = document.getElementById('txtBotonPtt');
@@ -180,10 +185,8 @@
             const data = snapshot.val();
             if (!data) return;
             
-            // FILTRO CRÍTICO: Si el audio es mío, no hago nada
             if (data.usuario === miCodigoSocio) return;
 
-            // EL FILTRO: Solo procesa el audio si se creó DESPUÉS de que entramos a la app
             if (data.audioBase64 && data.timestamp && data.timestamp > horaInicioApp && data.timestamp > ultimoAudioTimestamp) {
                 ultimoAudioTimestamp = data.timestamp;
                 if (!estaTransmitiendo) {
@@ -191,7 +194,6 @@
                     txtBotonPtt.innerText = "OCUPADO";
                     btnPtt.classList.add('recibiendo');
                     lblEstado.innerText = "RECIBIENDO AUDIO";
-                    // AQUÍ MUESTRA EL NOMBRE REAL DE QUIEN ENVIÓ EL AUDIO
                     lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando a: ${data.usuario}</span>`;
                     reproducirVozEntrante(data.audioBase64);
                 }
@@ -201,7 +203,6 @@
                     btnPtt.setAttribute('disabled', 'true');
                     txtBotonPtt.innerText = "OCUPADO";
                     lblEstado.innerText = "CANAL OCUPADO";
-                    // AQUÍ MUESTRA EL NOMBRE REAL DE QUIEN ESTÁ HABLANDO EN VIVO
                     lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> ${data.estado.usuario} está en la línea...</span>`;
                 }
             }
