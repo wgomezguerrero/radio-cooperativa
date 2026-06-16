@@ -148,6 +148,7 @@
     let fragmentosAudio = [];
     let streamMicrofono = null;
 
+    // Aquí se lee el Nombre de usuario registrado
     const socioIdLogged = localStorage.getItem("socio_id_logged");
     if(socioIdLogged && socioIdLogged.trim() !== "") { miCodigoSocio = socioIdLogged; }
 
@@ -157,7 +158,6 @@
     const lblQuienHabla = document.getElementById('lblQuienHabla');
 
     window.onload = function() {
-        // Solicita el micro al cargar la URL de forma legítima
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 streamMicrofono = stream;
@@ -180,7 +180,7 @@
             const data = snapshot.val();
             if (!data) return;
             
-            // FILTRO CRÍTICO: Si el audio del nodo es mío, no hago nada
+            // FILTRO CRÍTICO: Si el audio es mío, no hago nada
             if (data.usuario === miCodigoSocio) return;
 
             // EL FILTRO: Solo procesa el audio si se creó DESPUÉS de que entramos a la app
@@ -191,7 +191,8 @@
                     txtBotonPtt.innerText = "OCUPADO";
                     btnPtt.classList.add('recibiendo');
                     lblEstado.innerText = "RECIBIENDO AUDIO";
-                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando...</span>`;
+                    // AQUÍ MUESTRA EL NOMBRE REAL DE QUIEN ENVIÓ EL AUDIO
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando a: ${data.usuario}</span>`;
                     reproducirVozEntrante(data.audioBase64);
                 }
             } 
@@ -200,7 +201,8 @@
                     btnPtt.setAttribute('disabled', 'true');
                     txtBotonPtt.innerText = "OCUPADO";
                     lblEstado.innerText = "CANAL OCUPADO";
-                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> Alguien está en la línea...</span>`;
+                    // AQUÍ MUESTRA EL NOMBRE REAL DE QUIEN ESTÁ HABLANDO EN VIVO
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> ${data.estado.usuario} está en la línea...</span>`;
                 }
             }
             else {
@@ -288,12 +290,11 @@
         }
     }
 
-    // Función de la flecha superior para volver al menú de la app
     function volverAtras() {
         if (window.history.length > 1) {
             window.history.back();
         } else {
-            window.location.href = "go:inicio"; // Cierre seguro de respaldo en WebView
+            window.location.href = "go:inicio";
         }
     }
 </script>
