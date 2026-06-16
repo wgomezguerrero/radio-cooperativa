@@ -146,16 +146,8 @@
     let fragmentosAudio = [];
     let streamMicrofono = null;
 
-    // --- CORRECCIÓN CRÍTICA DE IDENTIFICACIÓN ---
-    // Forzamos a que intente leer el nombre real con el que se registró el conductor
+    // --- CORRECCIÓN INTEGRAL DE IDENTIFICACIÓN ---
     let miCodigoSocio = localStorage.getItem("socio_id_logged");
-
-    // Si la variable está vacía, no tiene texto o es nula, recién ahí le asignamos un "Anónimo" temporal para que la radio no falle
-    if (!miCodigoSocio || miCodigoSocio.trim() === "") { 
-        miCodigoSocio = "Conductor_Anonimo_" + Math.floor(Math.random() * 899 + 100); 
-    } else {
-        miCodigoSocio = miCodigoSocio.trim(); // Limpia espacios raros si los hay
-    }
 
     const btnPtt = document.getElementById('btnPttRadio');
     const txtBotonPtt = document.getElementById('txtBotonPtt');
@@ -163,20 +155,60 @@
     const lblQuienHabla = document.getElementById('lblQuienHabla');
 
     window.onload = function() {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                streamMicrofono = stream;
-                btnPtt.removeAttribute('disabled');
-                txtBotonPtt.innerText = "PULSAR";
-                lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
-                lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
-            })
-            .catch(e => {
-                lblEstado.innerText = "SIN ACCESO AL MICRÓFONO";
-                lblQuienHabla.innerHTML = `<span style="color: #e74c3c; font-weight: 600;">Permite el micrófono en la barra del teléfono.</span>`;
-            });
+        // Verificar si existe la identificación, si no, solicitar PIN para cruzar datos con Firebase
+        verificarEIdentificarSocio(() => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    streamMicrofono = stream;
+                    btnPtt.removeAttribute('disabled');
+                    txtBotonPtt.innerText = "PULSAR";
+                    lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
+                    lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (${miCodigoSocio})</span>`;
+                })
+                .catch(e => {
+                    lblEstado.innerText = "SIN ACCESO AL MICRÓFONO";
+                    lblQuienHabla.innerHTML = `<span style="color: #e74c3c; font-weight: 600;">Permite el micrófono en la barra del teléfono.</span>`;
+                });
 
-        activarReceptorRadio();
+            activarReceptorRadio();
+        });
+    }
+
+    // Nueva función inteligente que asocia el PIN de la base a la memoria local de la Radio
+    function verificarEIdentificarSocio(callback) {
+        if (!miCodigoSocio || miCodigoSocio.trim() === "" || miCodigoSocio.startsWith("Conductor_Anonimo")) {
+            let pinIngresado = prompt("Sincronización de Radio:\nPor favor ingresa tu PIN de Socio de 4 dígitos:");
+            
+            if (pinIngresado && pinIngresado.trim() !== "") {
+                lblEstado.innerText = "BUSCANDO SOCIO...";
+                db.ref('socios').once('value', (snapshot) => {
+                    const socios = snapshot.val() || {};
+                    let socioEncontrado = null;
+
+                    Object.keys(socios).forEach((key) => {
+                        if (socios[key].pin === pinIngresado.trim()) {
+                            socioEncontrado = socios[key];
+                        }
+                    });
+
+                    if (socioEncontrado) {
+                        miCodigoSocio = socioEncontrado.nombre + " " + socioEncontrado.apellido;
+                        localStorage.setItem("socio_id_logged", miCodigoSocio);
+                        alert("¡Sincronización Exitosa!\nConectado como: " + miCodigoSocio);
+                    } else {
+                        alert("PIN no encontrado. Se asignará un indicativo temporal.");
+                        miCodigoSocio = "Conductor_Anonimo_" + Math.floor(Math.random() * 899 + 100);
+                    }
+                    callback();
+                });
+            } else {
+                miCodigoSocio = "Conductor_Anonimo_" + Math.floor(Math.random() * 899 + 100);
+                callback();
+            }
+        } else {
+            miCodigoSocio = miCodigoSocio.trim();
+            callback();
+        }
     }
 
     // --- ESCUCHAR CANAL EN TIEMPO REAL ---
@@ -229,7 +261,7 @@
         }
         btnPtt.classList.remove('recibiendo');
         lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
-        lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
+        lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (${miCodigoSocio})</span>`;
     }
 
     // --- MANEJO DEL BOTÓN PTT (PULSAR PARA HABLAR) ---
@@ -258,7 +290,7 @@
                 if (fragmentosAudio.length > 0) {
                     const blobAudio = new Blob(fragmentosAudio, { type: 'audio/webm' });
                     const lector = new FileReader();
-                    lector.readAsDataURL(blobAudio);
+                    const lector.readAsDataURL(blobAudio);
                     lector.onloadend = () => {
                         db.ref('radio_frecuencia/canal_01').set({
                             usuario: miCodigoSocio,
