@@ -24,7 +24,7 @@
             display: flex; flex-direction: column; min-height: 100vh;
         }
 
-        /* Barra superior de navegación */
+        /* Nueva barra superior de navegación */
         .navbar-superior {
             width: 100%;
             background-color: #1a1a1e;
@@ -102,7 +102,7 @@
     <div class="container">
         <div class="display-radio">
             <div class="display-frecuencia"><i class="fa-solid fa-radio"></i> CANAL-01 CH</div>
-            <div class="display-estado" id="lblEstadoConexion">INICIALIZANDO AUDIO...</div>
+            <div class="display-estado" id="lblEstadoConexion">CONFIGURANDO HARDWARE...</div>
         </div>
 
         <div class="ptt-container">
@@ -137,16 +137,19 @@
     if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
     const db = firebase.database();
 
+    // Variable clave para guardar la marca de tiempo exacta de apertura de la app
     const horaInicioApp = Date.now();
 
     let estaTransmitiendo = false;
+    let miCodigoSocio = "Socio_" + Math.floor(Math.random() * 899 + 100);
     let ultimoAudioTimestamp = 0;
     
     let grabadorNativo = null;
     let fragmentosAudio = [];
     let streamMicrofono = null;
 
-    let miCodigoSocio = localStorage.getItem("socio_id_logged");
+    const socioIdLogged = localStorage.getItem("socio_id_logged");
+    if(socioIdLogged && socioIdLogged.trim() !== "") { miCodigoSocio = socioIdLogged; }
 
     const btnPtt = document.getElementById('btnPttRadio');
     const txtBotonPtt = document.getElementById('txtBotonPtt');
@@ -154,63 +157,21 @@
     const lblQuienHabla = document.getElementById('lblQuienHabla');
 
     window.onload = function() {
-        // Primero solicitamos acceso al micrófono de forma asíncrona para no congelar la pantalla
+        // Solicita el micro al cargar la URL de forma legítima
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 streamMicrofono = stream;
-                
-                // Una vez concedido el hardware, pasamos a validar la identidad
-                verificarEIdentificarSocio(() => {
-                    btnPtt.removeAttribute('disabled');
-                    txtBotonPtt.innerText = "PULSAR";
-                    lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
-                    lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (${miCodigoSocio})</span>`;
-                    activarReceptorRadio();
-                });
+                btnPtt.removeAttribute('disabled');
+                txtBotonPtt.innerText = "PULSAR";
+                lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
+                lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
             })
             .catch(e => {
                 lblEstado.innerText = "SIN ACCESO AL MICRÓFONO";
                 lblQuienHabla.innerHTML = `<span style="color: #e74c3c; font-weight: 600;">Permite el micrófono en la barra del teléfono.</span>`;
             });
-    }
 
-    function verificarEIdentificarSocio(callback) {
-        if (!miCodigoSocio || miCodigoSocio.trim() === "" || miCodigoSocio.startsWith("Conductor_Anonimo")) {
-            // Un retraso mínimo de 300ms para asegurar que el prompt no congele el renderizado inicial
-            setTimeout(() => {
-                let pinIngresado = prompt("Sincronización de Radio:\nPor favor ingresa tu PIN de Socio de 4 dígitos:");
-                
-                if (pinIngresado && pinIngresado.trim() !== "") {
-                    lblEstado.innerText = "BUSCANDO SOCIO...";
-                    db.ref('socios').once('value', (snapshot) => {
-                        const socios = snapshot.val() || {};
-                        let socioEncontrado = null;
-
-                        Object.keys(socios).forEach((key) => {
-                            if (socios[key].pin === pinIngresado.trim()) {
-                                socioEncontrado = socios[key];
-                            }
-                        });
-
-                        if (socioEncontrado) {
-                            miCodigoSocio = socioEncontrado.nombre + " " + socioEncontrado.apellido;
-                            localStorage.setItem("socio_id_logged", miCodigoSocio);
-                            alert("¡Sincronización Exitosa!\nConectado como: " + miCodigoSocio);
-                        } else {
-                            alert("PIN no encontrado. Se asignará un indicativo temporal.");
-                            miCodigoSocio = "Conductor_Anonimo_" + Math.floor(Math.random() * 899 + 100);
-                        }
-                        callback();
-                    });
-                } else {
-                    miCodigoSocio = "Conductor_Anonimo_" + Math.floor(Math.random() * 899 + 100);
-                    callback();
-                }
-            }, 300);
-        } else {
-            miCodigoSocio = miCodigoSocio.trim();
-            callback();
-        }
+        activarReceptorRadio();
     }
 
     // --- ESCUCHAR CANAL EN TIEMPO REAL ---
@@ -219,8 +180,10 @@
             const data = snapshot.val();
             if (!data) return;
             
+            // FILTRO CRÍTICO: Si el audio del nodo es mío, no hago nada
             if (data.usuario === miCodigoSocio) return;
 
+            // EL FILTRO: Solo procesa el audio si se creó DESPUÉS de que entramos a la app
             if (data.audioBase64 && data.timestamp && data.timestamp > horaInicioApp && data.timestamp > ultimoAudioTimestamp) {
                 ultimoAudioTimestamp = data.timestamp;
                 if (!estaTransmitiendo) {
@@ -228,7 +191,7 @@
                     txtBotonPtt.innerText = "OCUPADO";
                     btnPtt.classList.add('recibiendo');
                     lblEstado.innerText = "RECIBIENDO AUDIO";
-                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando a: ${data.usuario}</span>`;
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-exito); font-weight:600;"><i class="fa-solid fa-volume-high fa-bounce"></i> Escuchando...</span>`;
                     reproducirVozEntrante(data.audioBase64);
                 }
             } 
@@ -237,7 +200,7 @@
                     btnPtt.setAttribute('disabled', 'true');
                     txtBotonPtt.innerText = "OCUPADO";
                     lblEstado.innerText = "CANAL OCUPADO";
-                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> ${data.estado.usuario} está en la línea...</span>`;
+                    lblQuienHabla.innerHTML = `<span style="color:var(--co-primario); font-weight:600;"><i class="fa-solid fa-headset"></i> Alguien está en la línea...</span>`;
                 }
             }
             else {
@@ -263,7 +226,7 @@
         }
         btnPtt.classList.remove('recibiendo');
         lblEstado.innerText = "ONLINE - FRECUENCIA ABIERTA";
-        lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (${miCodigoSocio})</span>`;
+        lblQuienHabla.innerHTML = `<span style="color: var(--co-texto-secundario);"><i class="fa-solid fa-circle-check"></i> Frecuencia Lista (Silencio)</span>`;
     }
 
     // --- MANEJO DEL BOTÓN PTT (PULSAR PARA HABLAR) ---
@@ -292,7 +255,7 @@
                 if (fragmentosAudio.length > 0) {
                     const blobAudio = new Blob(fragmentosAudio, { type: 'audio/webm' });
                     const lector = new FileReader();
-                    const lector.readAsDataURL(blobAudio);
+                    lector.readAsDataURL(blobAudio);
                     lector.onloadend = () => {
                         db.ref('radio_frecuencia/canal_01').set({
                             usuario: miCodigoSocio,
@@ -325,13 +288,12 @@
         }
     }
 
-    // Solución al botón de retroceso usando la API nativa de historial del WebView
+    // Función de la flecha superior para volver al menú de la app
     function volverAtras() {
         if (window.history.length > 1) {
             window.history.back();
         } else {
-            // Forzar cierre alternativo si no hay historial en el contenedor
-            window.location.href = "about:blank";
+            window.location.href = "go:inicio"; // Cierre seguro de respaldo en WebView
         }
     }
 </script>
